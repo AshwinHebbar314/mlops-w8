@@ -1,0 +1,5 @@
+scikit-learn
+dvc[gcs]
+pandas
+mlflow
+pygit2
