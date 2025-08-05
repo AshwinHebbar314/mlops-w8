@@ -1,0 +1,4 @@
+[core]
+    remote = gcsb
+['remote "gcsb"']
+    url = gs://mlops-w8
