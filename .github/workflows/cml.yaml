@@ -5,6 +5,11 @@ on: [push]
 jobs:
   train-and-report:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # To checkout the repo and post commit comments
+      issues: write # To post comments on issues
+      pull-requests: write # To post comments on pull requests
+    
     steps:
       - uses: actions/checkout@v3
         with:
@@ -13,7 +18,7 @@ jobs:
       - name: 'Set up Python'
         uses: actions/setup-python@v4
         with:
-          python-version: '3.8'
+          python-version: '3.10'
 
       - name: 'Install dependencies'
         run: pip install -r requirements.txt # Create a requirements.txt file
@@ -23,9 +28,9 @@ jobs:
           GCP_CREDS: ${{ secrets.GCP_SA_KEY }} # Store your service account key as a secret
         run: |
           echo "$GCP_CREDS" > gcloud-creds.json
-          gcloud auth activate-service-account --key-file=gcloud-creds.json
-          dvc remote modify myremote gcp_project <your-gcp-project-id>
-
+          # gcloud auth activate-service-account --key-file=gcloud-creds.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/gcloud-creds.json" >> $GITHUB_ENV
+          dvc remote modify gcsb projectname thermal-effort-461417-i4
       - name: 'Train on all branches'
         run: |
           for branch in $(git branch -r | grep -v HEAD); do
@@ -35,9 +40,10 @@ jobs:
             echo "## Accuracy for ${branch#origin/}" >> report.md
             cat results/metrics.json | jq -r '.accuracy' >> report.md
           done
-
+      - name: 'Setup CML'
+        uses: iterative/setup-cml@v2
       - name: 'Create CML report'
         env:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cml-send-comment report.md
+          cml comment create report.md
