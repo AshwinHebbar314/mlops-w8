@@ -3,3 +3,5 @@ dvc[gcs]
 pandas
 mlflow
 pygit2
+dvc[gs]
+google-cloud-storage
